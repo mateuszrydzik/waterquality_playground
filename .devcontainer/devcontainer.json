@@ -1,0 +1,9 @@
+{
+    "image": "ghcr.io/rocker-org/devcontainer/r-ver:4",
+    "features": {
+        "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
+            "packages": "tmap, terra, sf, waterquality, Permian-Global-Research/rsi",
+            "installSystemRequirements": true
+        }
+    }
+}
