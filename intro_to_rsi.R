@@ -1,7 +1,3 @@
-# instalacja pakietu rsi
-#install.packages("pak")
-#pak::pak("Permian-Global-Research/rsi")
-
 library(rsi)
 library(sf)
 library(terra)
@@ -23,7 +19,7 @@ wngig_sentinel2_image <- get_sentinel2_imagery(
     wngig,
     start_date = "2023-10-01",
     end_date = "2023-10-31",
-    output_filename = tempfile(fileext = ".tif")
+    output_filename = "data/wngig_sentinel2_image.tif"
 )
 
 # wczytanie obrazów
@@ -33,7 +29,7 @@ wngig_sentinel2_rast <- terra::rast(wngig_sentinel2_image)
 
 # podgląd rastra na tle OSM
 tmap_mode("view")
-tm_shape(wngig_sentinel2_rast[[1]]) +
+tm_shape(wngig_sentinel2_rast[[4]]) +
     tm_raster()
 
 terra::plot(wngig_sentinel2_rast[[4]])
@@ -44,7 +40,7 @@ wngig_landsat_image <- get_landsat_imagery(
     wngig,
     start_date = "2023-09-01",
     end_date = "2023-10-31",
-    output_filename = tempfile(fileext = ".tif")
+    output_filename = "data/wngig_landsat_image.tif"
 )
 
 # wczytanie obrazów
@@ -75,15 +71,15 @@ terra::plot(terra::rast(ndvi_sentinel2))
 terra::plot(terra::rast(ndvi_landsat))
 
 # kolejny przykład, dla Białej Góry i zbiornika wodnego
-bg <- st_point(c(14.444869248447247, 53.97377309961469))
+bg <- st_point(c(14.473790, 53.948800))
 bg <- st_set_crs(st_sfc(bg), 4326)
-bg <- st_buffer(st_transform(bg, 2180), 1000)
+bg <- st_buffer(st_transform(bg, 2180), 100)
 
 # korzystamy z obrazu sentinel2
 bg_sentinel2_image <- get_sentinel2_imagery(
     bg,
-    start_date = "2023-10-01",
-    end_date = "2023-10-31",
+    start_date = "2023-07-28",
+    end_date = "2023-07-31",
     output_filename = tempfile(fileext = ".tif")
 )
 
@@ -96,7 +92,7 @@ tm_shape(bg_sentinel2_rast[[1]]) +
 par(mfrow = c(1, 1))
 terra::plotRGB(bg_sentinel2_rast, r = 4, g = 3, b = 2, stretch = "lin")
 
-# obliczenie wskaźników wodnych dla Sentinel - 2
+# obliczenie wskaźników wodnych dla Sentinel-2
 View(asi[asi$application_domain == "water", ])
 water_indices <- asi[asi$application_domain == "water", ]
 water_sentinel2_indices <- water_indices[water_indices$platforms == "Sentinel-2", ]
@@ -104,7 +100,7 @@ water_sentinel2_indices <- water_indices[water_indices$platforms == "Sentinel-2"
 water_sentinel2 <- calculate_indices(
     bg_sentinel2_rast,
     water_sentinel2_indices,
-    output_filename = tempfile(fileext = ".tif")
+    output_file = tempfile(fileext = ".tif")
 )
 
 terra::plot(terra::rast(water_sentinel2))
