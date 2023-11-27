@@ -70,6 +70,13 @@ ndvi_sentinel2 <- calculate_indices(
 terra::plot(terra::rast(ndvi_sentinel2))
 terra::plot(terra::rast(ndvi_landsat))
 
+
+#pobranie dem dla obszaru badan
+
+wngig_dem <- get_dem(wngig)
+terra::plot(terra::rast(wngig_dem))
+
+
 # kolejny przykład, dla Białej Góry i zbiornika wodnego
 bg <- st_point(c(14.473790, 53.948800))
 bg <- st_set_crs(st_sfc(bg), 4326)
@@ -95,7 +102,10 @@ terra::plotRGB(bg_sentinel2_rast, r = 4, g = 3, b = 2, stretch = "lin")
 # obliczenie wskaźników wodnych dla Sentinel-2
 View(asi[asi$application_domain == "water", ])
 water_indices <- asi[asi$application_domain == "water", ]
-water_sentinel2_indices <- water_indices[water_indices$platforms == "Sentinel-2", ]
+water_sentinel2_indices <- water_indices["Sentinel-2" %in% water_indices$platforms, ]
+water_sentinel2_indices <- water_sentinel2_indices[water_sentinel2_indices$short_name !="NDWIns", ]
+water_sentinel2_indices <- water_sentinel2_indices[water_sentinel2_indices$short_name !="MBWI", ]
+
 
 water_sentinel2 <- calculate_indices(
     bg_sentinel2_rast,
