@@ -1,0 +1,138 @@
+---
+title: "Przykładowy raport"
+author: "Mateusz Rydzik"
+format: html
+---
+
+# Obszar badan
+
+Badania przeprowadzono na obszarze Kostaryki. Zestawiono ze sobą wartości wskaźników, obliczonych na podstawie zdjęć satelitarnych. Zdjęcia pochodzą z lat 2017 i 2023. 
+
+``` {r}
+library(rsi)
+library(sf)
+library(tmap)
+library(waterquality)
+library(knitr)
+#library(diffeR) #useful?
+```
+
+
+``` {r}
+aoi <- st_read("data/costa_rica.gpkg")
+aoi_32617 <- st_transform(aoi, 32617)
+```
+
+``` {r}
+tmap_mode("view")
+tm_shape(aoi_32617[c(1, 2, 5), ]) +
+tm_polygons()
+```
+
+wczytanie rastrow
+
+``` {r}
+rast_2017 <- terra::rast("data/costarica_2017.tif")
+rast_2023 <- terra::rast("data/costarica_2023.tif")
+```
+
+funkcja do obliczania wskaźników, uzywajac pakietow **rsi** i **waterquality**
+
+``` {r}
+asi <- spectral_indices()
+
+calculate_index <- function(raster, aoi, index_name, use_wq = FALSE, sat = "landsat8") {
+  raster_crop <- terra::crop(raster, terra::ext(aoi))
+  raster_mask <- terra::mask(raster_crop, aoi)
+
+  if (use_wq) {
+    index_calculation <- wq_calc(
+      raster_mask,
+      alg = index_name,
+      sat = sat
+    )
+    index_calculation
+  } else {
+    index_calculation <- calculate_indices(
+      raster_mask,
+      asi[asi$short_name %in% c(index_name), ],
+      output_filename = tempfile(fileext = ".tif")
+    )
+    terra::rast(index_calculation)
+  }
+}
+```
+
+obliczenie wskaznikow... duzo tego
+``` {r}
+ndci_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "NDCI", sat="sentinel2")
+ndti_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "NDTI", sat="sentinel2")
+sabi_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
+turb_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+
+ndci_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "NDCI", sat="sentinel2")
+ndti_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "NDTI", sat="sentinel2")
+sabi_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
+turb_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+
+ndci_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "NDCI", sat="sentinel2")
+ndti_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "NDTI", sat="sentinel2")
+sabi_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
+turb_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+
+ndci_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "NDCI", sat="sentinel2")
+ndti_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "NDTI", sat="sentinel2")
+sabi_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
+turb_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+
+ndci_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "NDCI", sat="sentinel2")
+ndti_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "NDTI", sat="sentinel2")
+sabi_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
+turb_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+
+ndci_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "NDCI", sat="sentinel2")
+ndti_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "NDTI", sat="sentinel2")
+sabi_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
+turb_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+
+```
+
+funkcja do obliczanias statystyk opisowych
+
+``` {r}
+calculate_statistics <- function(raster) {
+  mean_val <- mean(raster[], na.rm = TRUE)
+  med_val <- median(raster[], na.rm = TRUE)
+  min_val <- min(raster[], na.rm = TRUE)
+  max_val <- max(raster[], na.rm = TRUE)
+  sd_val <- sd(raster[], na.rm = TRUE)
+
+ statistics_df <- c(mean_val, med_val, min_val, max_val, sd_val)
+}
+```
+
+funkcja-narzedzie to iteracyjnego obliczania statystyk
+``` {r}
+turn_stats_values_into_df <- function(raster_list) {
+  result_df <- data.frame()
+  for (raster in raster_list) {
+    result_df <- calculate_statistics(raster) %>% rbind(result_df, .)
+  }
+  colnames(result_df) <- c("mean", "med", "max", "max", "sd")
+  rownames(final_df) <- c("land reclamation", "south of city", "north of city")
+}
+```
+
+przyklad uzycia funkcji, obliczenie statystyk dla kazdego obszaru w roku 2023 dla wskaznika NDCI
+
+``` {r}
+ndci_2023 <- turn_stats_values_into_df(list(ndci_2023_lr, ndci_2023_south, ndci_2023_north))
+knitr::kable(final_df, "pipe", digits = 3)
+```
+
+raster roznic - zmiany wartosci wskaznika NDCI w czasie
+``` {r}
+ndci_diff_lr <- ndci_2023_lr - ndci_2017_lr
+res <- calculate_statistics(ndci_diff_lr)
+res
+```
