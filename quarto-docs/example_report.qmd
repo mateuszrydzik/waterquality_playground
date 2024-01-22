@@ -1,12 +1,14 @@
 ---
-title: "Przykładowy raport"
+title: "Porównanie wartości wskaźników spektralnych jakości wód dla obszaru miasta Limon dla lat 2017 i 2023"
 author: "Mateusz Rydzik"
 format: html
+execute:
+  silence: true
 ---
 
 # Obszar badan
 
-Badania przeprowadzono na obszarze Kostaryki. Zestawiono ze sobą wartości wskaźników, obliczonych na podstawie zdjęć satelitarnych. Zdjęcia pochodzą z lat 2017 i 2023. 
+Badania przeprowadzono dla obszaru wodnego, otaczającego miasto Limon w Kostaryce. Porównano ze sobą wskaźniki spektralne, oceniające jakość wody na podstawie obecności chlorofilu a. Jako obszar badań, wybrano rejon na obszarze którego występowały procesy tworzenia nowych lądów. Do porównania wybrano także wody sąsiadujące, wolne od procesów lądotwórczych. Do analizy wybrano zdjęcia z lat 2017 i 2023. 
 
 ``` {r}
 library(rsi)
@@ -17,27 +19,28 @@ library(knitr)
 #library(diffeR) #useful?
 ```
 
-
+Obszary badań zapisano w pliku geopackage. Zbiór zawiera pięć obszarów badań. W tej pracy posłużono się trzema. Jeden obszar obejmuje teren, na którym tworzono nowy ląd. Do porównania, uwzględniono także teren na północ i południe od miasta Limon.
 ``` {r}
-aoi <- st_read("data/costa_rica.gpkg")
+aoi <- st_read("/workspaces/waterquality_playground/data/costa_rica.gpkg")
 aoi_32617 <- st_transform(aoi, 32617)
 ```
 
+
+
+Jako obrazy satelitarne wykorzystano zdjęcia satelitarne Sentinel 2, pozyskane z Microsoft Planetary Computer, przy wykorzystaniu pakietu **rsi**.
 ``` {r}
-tmap_mode("view")
-tm_shape(aoi_32617[c(1, 2, 5), ]) +
-tm_polygons()
+rast_2017 <- terra::rast("/workspaces/waterquality_playground/data/costarica_2017.tif")
+rast_2023 <- terra::rast("/workspaces/waterquality_playground/data/costarica_2023.tif")
 ```
 
-wczytanie rastrow
-
 ``` {r}
-rast_2017 <- terra::rast("data/costarica_2017.tif")
-rast_2023 <- terra::rast("data/costarica_2023.tif")
+tm_shape(rast_2023[[1]]) +
+  tm_raster(legend.show = FALSE) +
+  tm_shape(aoi_32617[c(1, 2, 5), ]) +
+  tm_polygons(col = "area_of_interest")
 ```
 
-funkcja do obliczania wskaźników, uzywajac pakietow **rsi** i **waterquality**
-
+W pracy wykorzystano dwa wskaźniki spektralne: Normalized Difference Chlorophyll Index i surface algal bloom index (SABI).  NDCI pochodzi z pakietu **rsi**, a SABI - z **waterquality**. Dla usprawnienia procesu obliczania wskaźników skontruowanu funkcję obsługującą wskaźniki z obydwu pakietów. Dodatkowo, obrazy są przycinane do wybranych obszarów badań.
 ``` {r}
 asi <- spectral_indices()
 
@@ -63,42 +66,25 @@ calculate_index <- function(raster, aoi, index_name, use_wq = FALSE, sat = "land
 }
 ```
 
-obliczenie wskaznikow... duzo tego
+Napisaną funkcję wykorzystano do obliczenia obydwu wskaźników dla trzech obszarów, dla dwóch lat.
 ``` {r}
-ndci_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "NDCI", sat="sentinel2")
-ndti_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "NDTI", sat="sentinel2")
-sabi_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
-turb_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
-
 ndci_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "NDCI", sat="sentinel2")
-ndti_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "NDTI", sat="sentinel2")
 sabi_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
-turb_2017_lr <- calculate_index(rast_2017, aoi_32617[1, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
-
-ndci_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "NDCI", sat="sentinel2")
-ndti_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "NDTI", sat="sentinel2")
-sabi_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
-turb_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+ndci_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "NDCI", sat="sentinel2")
+sabi_2023_lr <- calculate_index(rast_2023, aoi_32617[1, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
 
 ndci_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "NDCI", sat="sentinel2")
-ndti_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "NDTI", sat="sentinel2")
 sabi_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
-turb_2017_north <- calculate_index(rast_2017, aoi_32617[5, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
-
-ndci_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "NDCI", sat="sentinel2")
-ndti_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "NDTI", sat="sentinel2")
-sabi_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
-turb_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
+ndci_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "NDCI", sat="sentinel2")
+sabi_2023_north <- calculate_index(rast_2023, aoi_32617[5, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
 
 ndci_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "NDCI", sat="sentinel2")
-ndti_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "NDTI", sat="sentinel2")
 sabi_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
-turb_2017_south <- calculate_index(rast_2017, aoi_32617[2, 0], "TurbFrohn09GreenPlusRedBothOverBlue", use_wq = TRUE, sat = "sentinel2")
-
+ndci_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "NDCI", sat="sentinel2")
+sabi_2023_south <- calculate_index(rast_2023, aoi_32617[2, 0], "Al10SABI", use_wq = TRUE, sat = "sentinel2")
 ```
 
-funkcja do obliczanias statystyk opisowych
-
+Do obliczenia statystyk opisowych dla wskaźników spektralnych, napisano dwie funkcje, obliczające wartości i zwracające je w formie ramki danych.
 ``` {r}
 calculate_statistics <- function(raster) {
   mean_val <- mean(raster[], na.rm = TRUE)
@@ -109,30 +95,82 @@ calculate_statistics <- function(raster) {
 
  statistics_df <- c(mean_val, med_val, min_val, max_val, sd_val)
 }
-```
 
-funkcja-narzedzie to iteracyjnego obliczania statystyk
-``` {r}
 turn_stats_values_into_df <- function(raster_list) {
   result_df <- data.frame()
   for (raster in raster_list) {
     result_df <- calculate_statistics(raster) %>% rbind(result_df, .)
   }
-  colnames(result_df) <- c("mean", "med", "max", "max", "sd")
-  rownames(final_df) <- c("land reclamation", "south of city", "north of city")
+  colnames(result_df) <- c("mean", "med", "min", "max", "sd")
+  rownames(result_df) <- c("land reclamation", "south of city", "north of city")
+  result_df
 }
 ```
 
-przyklad uzycia funkcji, obliczenie statystyk dla kazdego obszaru w roku 2023 dla wskaznika NDCI
-
+Tak przygotowane funkcje użyto na rastrach ze wskaźnikami
 ``` {r}
+ndci_2017 <- turn_stats_values_into_df(list(ndci_2017_lr, ndci_2017_south, ndci_2017_north))
 ndci_2023 <- turn_stats_values_into_df(list(ndci_2023_lr, ndci_2023_south, ndci_2023_north))
-knitr::kable(final_df, "pipe", digits = 3)
+sabi_2017 <- turn_stats_values_into_df(list(sabi_2017_lr, sabi_2017_south, sabi_2017_north))
+sabi_2023 <- turn_stats_values_into_df(list(sabi_2023_lr, sabi_2023_south, sabi_2023_north))
 ```
 
-raster roznic - zmiany wartosci wskaznika NDCI w czasie
+``` {r}
+knitr::kable(ndci_2017, "pipe", digits = 3)
+knitr::kable(ndci_2023, "pipe", digits = 3)
+```
+
+Zestawiając ze sobą wartości wskaźnika NDCI między latami 2017 i 2023, widoczne są niskie wartości dla wszystkich obszarów. Wartości średnich i median sięgają rzędu tysięcznych. Dla wskaźnika NDCI, wyższe wartości świadczą o większej obecności chlorofilu a w wodzie. Obszar, na którym tworzono nowy ląd cechował się najmniejszymi średnimi wartościami. Warto odnotować, że na jego obszarze zanotowano także najmniejsze wahania wartości, o czym świadczy najniższa wartość odchylenia standardowego. Zestawiając dane z 2017 i 2023 zauważyć można podobieństwo w trendach zmian wartości między trzema obszarami. Widoczny jest spadek wartości statystyk w roku 2023. Zmniejszyły się także odchylenia, w szczególności dla obszaru na północ od miasta Limon.
+
+``` {r}
+knitr::kable(sabi_2017, "pipe", digits = 3)
+knitr::kable(sabi_2023, "pipe", digits = 3)
+```
+
+Podobny trend jest widoczny także dla wskaźnika SABI. Wraz z upływem czasu, odnotowano zmniejszenie odchyleń wartości od średniej. Przeciwny trend zaobserwowano natomiast dla wartości obszaru lądotwórczego. Średnia i mediana wzrosły z czasem, w przeciwieństwie dla terenów przy mieście. 
+
+``` {r}
+par(mfrow = c(2, 2))
+hist(ndci_2017_lr[], xlim = c(-0.2, 0.2), main = "NDCI 2017 LR")
+hist(ndci_2023_lr[], xlim = c(-0.2, 0.2), main = "NDCI 2023 LR")
+hist(sabi_2017_lr[], xlim = c(-0.2, 0.2), main = "SABI 2017 LR")
+hist(sabi_2023_lr[], xlim = c(-0.2, 0.2), main = "SABI 2023 LR")
+
+``` 
+
+Spadek rozrzutu wartości jest widoczny również na wykresach rozkładu. Wartości w 2023 roku skupiały się bardziej wokół zera, gdzie dla danych z 2017 widoczny jest większy rozkład danych.
+
+Do obserwacji zmian przestrzennych wskaźników obliczono rastry różnic, odzwierciedlające zmiany wartości wraz z upływem czasu. Dla rastrów różnic, wartości dodatnie świadczą o wyższej wartości w 2023 roku niż w 2017. Wartości ujemne informują natomiast o niższej wartości w roku późniejszym.
 ``` {r}
 ndci_diff_lr <- ndci_2023_lr - ndci_2017_lr
-res <- calculate_statistics(ndci_diff_lr)
-res
+ndci_diff_north <- ndci_2023_north - ndci_2017_north
+ndci_diff_south <- ndci_2023_south - ndci_2017_south
+
+sabi_diff_lr <- sabi_2023_lr - sabi_2017_lr
+sabi_diff_north <- sabi_2023_north - sabi_2017_north
+sabi_diff_south <- sabi_2023_south - sabi_2017_south
+```
+
+``` {r}
+par(mfrow = c(3, 1))
+terra::plot(ndci_diff_lr, range = c(-0.2, 0.2))
+terra::plot(ndci_diff_north, range = c(-0.2, 0.2))
+terra::plot(ndci_diff_south, range = c(-0.2, 0.2))
+```
+
+``` {r}
+par(mfrow = c(1, 2))
+terra::plot(ndci_diff_lr)
+terra::plot(sabi_diff_lr)
+
+# terra::plot(ndci_diff_north, range = c(-1, 1))
+# terra::plot(ndci_diff_south, range = c(-1, 1))
+```
+
+``` {r}
+ndci <- turn_stats_values_into_df(list(ndci_diff_lr, ndci_diff_south, ndci_diff_north))
+sabi <- turn_stats_values_into_df(list(sabi_diff_lr, sabi_diff_south, sabi_diff_north))
+knitr::kable(ndci, "pipe", digits = 3)
+knitr::kable(sabi, "pipe", digits = 3)
+
 ```
