@@ -1,0 +1,104 @@
+---
+title: "Test CDSE"
+author: "Mateusz Rydzik"
+format: html
+---
+
+potrzebne pakiety do testu
+``` {r}
+#install.packages("CDSE")
+library(CDSE)
+library(sf)
+library(terra)
+```
+
+Zaczniemy od funkcji `CDSE::GetCollections()`. Opis metody `Retrieves the list of available imagery collections.` Zwraca ramkę danych z dostępnymi kolekcjami. Interesują nas wartości z columny 'id'.
+
+Dokumentacja pakietu i spis metod tutaj https://cran.r-project.org/web/packages/CDSE/CDSE.pdf
+
+``` {r}
+CDSE::GetCollections()
+```
+
+Do pobrania danych z Copernicus Dataspace, potrzebujemy zalozyc konto na Dataspace Copernicus. Nastepnie nalezy wygenerowac tokeny. Wykonac to mozemy pod linkiem https://shapps.dataspace.copernicus.eu/dashboard/#/account/settings, wchodzac w  OAuth clients -> Create new. Zapisujemy sekret (nie będzie później mozliwosci podgladu), id będzie podane po zamknięciu okna
+
+wczytuję id i sekret z pliku .env, dobra praktyka zeby nie udostępniac credentiali w publicznym skrypcie
+
+``` {r}
+readRenviron(".env")
+id <- Sys.getenv("OAUTH_ID")
+secret <- Sys.getenv("OAUTH_SECRET")
+```
+
+tworzymy klienta, wykorzystamy do pobierania obrazow. wykorzystujemy funkcję `CDSE::GetOAuthClient()`
+``` {r}
+client <- CDSE::GetOAuthClient(
+    id = id,
+    secret = secret
+)
+```
+
+tworzymy obszar, dla którego chcemy pozyskac dane
+``` {r}
+limon <- st_point(c(-83.10501088264397, 10.008541163716231))
+limon <- st_set_crs(st_sfc(limon), 4326)
+limon <- st_sf(st_buffer(st_transform(limon, 32617), 5000))
+```
+
+**CDSE** ma specyficzny sposob pozyskiwania danych. nalezy podac predefiniowany skrypt, ktory odpowiednio przetworzy obrazy przed ich zwroceniem. nie ma ich wylistowanych w dokumentacji, znalazlem je recznie w plikach pakietu. dostępne są: `NDVI_float32.js`, `NDVI_uint8.js`, `RawBands.js`, `S2L2A_specifics.js`, `TrueColor.js`.
+``` {r}
+ndvi <- system.file("scripts", "NDVI_float32.js", package = "CDSE")
+rawbands <- system.file("scripts", "RawBands.js", package = "CDSE")
+truecolor <- system.file("scripts", "TrueColor.js", package = "CDSE")
+```
+
+zaczynamy pobieranie zdjęć poprzez funkcję `CDSE::GetArchiveImage`. wykorzystałem wymagane argumenty, całą listę mozna znalezc w dokumentacji. pobierzemy dwa obrazy sentinel-2, dla jednego wykorzystamy skrypt do pozyskania obrazu true colors, dla drugiego - wyliczymy NDVI. trzeci obraz bedzie pochodzil ze zbioru sentinel-3.
+``` {r}
+sentinel_2_truecolor <- CDSE::GetArchiveImage(
+    aoi = limon,
+    time_range = "2023-07-09",
+    collection = "sentinel-2-l2a",
+    format = "image/tiff",
+    resolution = 10,
+    script = truecolor,
+    client = client
+)
+
+sentinel_2_ndvi <- CDSE::GetArchiveImage(
+    aoi = limon,
+    time_range = "2023-07-09",
+    collection = "sentinel-2-l2a",
+    format = "image/tiff",
+    resolution = 10,
+    script = ndvi,
+    client = client
+)
+
+sentinel_3 <- CDSE::GetArchiveImage(
+    aoi = limon,
+    time_range = "2023-07-09",
+    collection = "sentinel-3-olci",
+    format = "image/tiff",
+    resolution = 10,
+    script = truecolor,
+    client = client
+)
+```
+
+metoda zwraca domyslnie obiekt spatraster. mozemy go wyswietlic uzywajac `terra::plot()`
+``` {r}
+par(mfrow = c(1, 2))
+terra::plot(sentinel_2_truecolor)
+terra::plot(sentinel_2_ndvi, legend = FALSE, axes = FALSE, box = FALSE)
+```
+
+podobnie dla obrazu sentinel 3
+``` {r}
+par(mfrow = c(1, 1))
+terra::plot(sentinel_3)
+```
+
+pozyskane obrazy mozemy uzyc do dalszej analizy
+``` {r}
+hist(sentinel_2_ndvi, main = "NDVI")
+```
