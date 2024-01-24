@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Mateusz Rydzik">
+
+<title>Porównanie wartości wskaźników spektralnych jakości wód dla obszaru miasta Limon dla lat 2017 i 2023</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="example_report_files/libs/clipboard/clipboard.min.js"></script>
+<script src="example_report_files/libs/quarto-html/quarto.js"></script>
+<script src="example_report_files/libs/quarto-html/popper.min.js"></script>
+<script src="example_report_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="example_report_files/libs/quarto-html/anchor.min.js"></script>
+<link href="example_report_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="example_report_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="example_report_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="example_report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="example_report_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Porównanie wartości wskaźników spektralnych jakości wód dla obszaru miasta Limon dla lat 2017 i 2023</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Mateusz Rydzik </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="obszar-badan" class="level2">
+<h2 class="anchored" data-anchor-id="obszar-badan">Obszar badan</h2>
+<p>Badania przeprowadzono dla obszaru wodnego, otaczającego miasto Limon w Kostaryce. Porównano ze sobą wskaźniki spektralne, oceniające jakość wody na podstawie obecności chlorofilu a. Jako obszar badań, wybrano rejon na obszarze którego występowały procesy tworzenia nowych lądów. Do porównania wybrano także wody sąsiadujące, wolne od procesów lądotwórczych. Do analizy wybrano zdjęcia z lat 2017 i 2023.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rsi)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(waterquality)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#library(diffeR) #useful?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Obszary badań zapisano w pliku geopackage. Zbiór zawiera pięć obszarów badań. W tej pracy posłużono się trzema. Jeden obszar obejmuje teren, na którym tworzono nowy ląd. Do porównania, uwzględniono także teren na północ i południe od miasta Limon.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aoi <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"/workspaces/waterquality_playground/data/costa_rica.gpkg"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>aoi_32617 <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(aoi, <span class="dv">32617</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Jako obrazy satelitarne wykorzystano zdjęcia satelitarne Sentinel 2, pozyskane z Microsoft Planetary Computer, przy wykorzystaniu pakietu <strong>rsi</strong>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rast_2017 <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">rast</span>(<span class="st">"/workspaces/waterquality_playground/data/costarica_2017.tif"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>rast_2023 <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">rast</span>(<span class="st">"/workspaces/waterquality_playground/data/costarica_2023.tif"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(rast_2023[[<span class="dv">1</span>]]) <span class="sc">+</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>(<span class="at">legend.show =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(aoi_32617[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">5</span>), ]) <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"area_of_interest"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="example_report_files/figure-html/plot_aoi-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="obliczenia" class="level2">
+<h2 class="anchored" data-anchor-id="obliczenia">Obliczenia</h2>
+<p>W pracy wykorzystano dwa wskaźniki spektralne: Normalized Difference Chlorophyll Index i surface algal bloom index (SABI). NDCI pochodzi z pakietu <strong>rsi</strong>, a SABI - z <strong>waterquality</strong>. Dla usprawnienia procesu obliczania wskaźników skontruowanu funkcję obsługującą wskaźniki z obydwu pakietów. Dodatkowo, obrazy są przycinane do wybranych obszarów badań.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>asi <span class="ot">&lt;-</span> <span class="fu">spectral_indices</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>calculate_index <span class="ot">&lt;-</span> <span class="cf">function</span>(raster, aoi, index_name, <span class="at">use_wq =</span> <span class="cn">FALSE</span>, <span class="at">sat =</span> <span class="st">"landsat8"</span>) {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  raster_crop <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">crop</span>(raster, terra<span class="sc">::</span><span class="fu">ext</span>(aoi))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  raster_mask <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">mask</span>(raster_crop, aoi)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (use_wq) {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    index_calculation <span class="ot">&lt;-</span> <span class="fu">wq_calc</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      raster_mask,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">alg =</span> index_name,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">sat =</span> sat</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    index_calculation</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    index_calculation <span class="ot">&lt;-</span> <span class="fu">calculate_indices</span>(</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      raster_mask,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      asi[asi<span class="sc">$</span>short_name <span class="sc">%in%</span> <span class="fu">c</span>(index_name), ],</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">output_filename =</span> <span class="fu">tempfile</span>(<span class="at">fileext =</span> <span class="st">".tif"</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    terra<span class="sc">::</span><span class="fu">rast</span>(index_calculation)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Napisaną funkcję wykorzystano do obliczenia obydwu wskaźników dla trzech obszarów, dla dwóch lat.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ndci_2017_lr <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2017, aoi_32617[<span class="dv">1</span>, <span class="dv">0</span>], <span class="st">"NDCI"</span>, <span class="at">sat=</span><span class="st">"sentinel2"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>sabi_2017_lr <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2017, aoi_32617[<span class="dv">1</span>, <span class="dv">0</span>], <span class="st">"Al10SABI"</span>, <span class="at">use_wq =</span> <span class="cn">TRUE</span>, <span class="at">sat =</span> <span class="st">"sentinel2"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ndci_2023_lr <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2023, aoi_32617[<span class="dv">1</span>, <span class="dv">0</span>], <span class="st">"NDCI"</span>, <span class="at">sat=</span><span class="st">"sentinel2"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>sabi_2023_lr <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2023, aoi_32617[<span class="dv">1</span>, <span class="dv">0</span>], <span class="st">"Al10SABI"</span>, <span class="at">use_wq =</span> <span class="cn">TRUE</span>, <span class="at">sat =</span> <span class="st">"sentinel2"</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>ndci_2017_north <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2017, aoi_32617[<span class="dv">5</span>, <span class="dv">0</span>], <span class="st">"NDCI"</span>, <span class="at">sat=</span><span class="st">"sentinel2"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>sabi_2017_north <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2017, aoi_32617[<span class="dv">5</span>, <span class="dv">0</span>], <span class="st">"Al10SABI"</span>, <span class="at">use_wq =</span> <span class="cn">TRUE</span>, <span class="at">sat =</span> <span class="st">"sentinel2"</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>ndci_2023_north <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2023, aoi_32617[<span class="dv">5</span>, <span class="dv">0</span>], <span class="st">"NDCI"</span>, <span class="at">sat=</span><span class="st">"sentinel2"</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>sabi_2023_north <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2023, aoi_32617[<span class="dv">5</span>, <span class="dv">0</span>], <span class="st">"Al10SABI"</span>, <span class="at">use_wq =</span> <span class="cn">TRUE</span>, <span class="at">sat =</span> <span class="st">"sentinel2"</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>ndci_2017_south <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2017, aoi_32617[<span class="dv">2</span>, <span class="dv">0</span>], <span class="st">"NDCI"</span>, <span class="at">sat=</span><span class="st">"sentinel2"</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>sabi_2017_south <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2017, aoi_32617[<span class="dv">2</span>, <span class="dv">0</span>], <span class="st">"Al10SABI"</span>, <span class="at">use_wq =</span> <span class="cn">TRUE</span>, <span class="at">sat =</span> <span class="st">"sentinel2"</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>ndci_2023_south <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2023, aoi_32617[<span class="dv">2</span>, <span class="dv">0</span>], <span class="st">"NDCI"</span>, <span class="at">sat=</span><span class="st">"sentinel2"</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>sabi_2023_south <span class="ot">&lt;-</span> <span class="fu">calculate_index</span>(rast_2023, aoi_32617[<span class="dv">2</span>, <span class="dv">0</span>], <span class="st">"Al10SABI"</span>, <span class="at">use_wq =</span> <span class="cn">TRUE</span>, <span class="at">sat =</span> <span class="st">"sentinel2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Do obliczenia statystyk opisowych dla wskaźników spektralnych, napisano dwie funkcje, obliczające wartości i zwracające je w formie ramki danych.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>calculate_statistics <span class="ot">&lt;-</span> <span class="cf">function</span>(raster) {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  mean_val <span class="ot">&lt;-</span> <span class="fu">mean</span>(raster[], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  med_val <span class="ot">&lt;-</span> <span class="fu">median</span>(raster[], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  min_val <span class="ot">&lt;-</span> <span class="fu">min</span>(raster[], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  max_val <span class="ot">&lt;-</span> <span class="fu">max</span>(raster[], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  sd_val <span class="ot">&lt;-</span> <span class="fu">sd</span>(raster[], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a> statistics_df <span class="ot">&lt;-</span> <span class="fu">c</span>(mean_val, med_val, min_val, max_val, sd_val)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>turn_stats_values_into_df <span class="ot">&lt;-</span> <span class="cf">function</span>(raster_list) {</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  result_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (raster <span class="cf">in</span> raster_list) {</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    result_df <span class="ot">&lt;-</span> <span class="fu">calculate_statistics</span>(raster) <span class="sc">%&gt;%</span> <span class="fu">rbind</span>(result_df, .)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(result_df) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"mean"</span>, <span class="st">"med"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>, <span class="st">"sd"</span>)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(result_df) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"land reclamation"</span>, <span class="st">"south of city"</span>, <span class="st">"north of city"</span>)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  result_df</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Tak przygotowane funkcje użyto na rastrach ze wskaźnikami</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ndci_2017 <span class="ot">&lt;-</span> <span class="fu">turn_stats_values_into_df</span>(<span class="fu">list</span>(ndci_2017_lr, ndci_2017_south, ndci_2017_north))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ndci_2023 <span class="ot">&lt;-</span> <span class="fu">turn_stats_values_into_df</span>(<span class="fu">list</span>(ndci_2023_lr, ndci_2023_south, ndci_2023_north))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>sabi_2017 <span class="ot">&lt;-</span> <span class="fu">turn_stats_values_into_df</span>(<span class="fu">list</span>(sabi_2017_lr, sabi_2017_south, sabi_2017_north))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>sabi_2023 <span class="ot">&lt;-</span> <span class="fu">turn_stats_values_into_df</span>(<span class="fu">list</span>(sabi_2023_lr, sabi_2023_south, sabi_2023_north))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Do obserwacji zmian przestrzennych wskaźników obliczono rastry różnic, odzwierciedlające zmiany wartości wraz z upływem czasu. Dla rastrów różnic, wartości dodatnie świadczą o wyższej wartości w 2023 roku niż w 2017. Wartości ujemne informują natomiast o niższej wartości w roku późniejszym.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ndci_diff_lr <span class="ot">&lt;-</span> ndci_2023_lr <span class="sc">-</span> ndci_2017_lr</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ndci_diff_north <span class="ot">&lt;-</span> ndci_2023_north <span class="sc">-</span> ndci_2017_north</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>ndci_diff_south <span class="ot">&lt;-</span> ndci_2023_south <span class="sc">-</span> ndci_2017_south</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>sabi_diff_lr <span class="ot">&lt;-</span> sabi_2023_lr <span class="sc">-</span> sabi_2017_lr</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>sabi_diff_north <span class="ot">&lt;-</span> sabi_2023_north <span class="sc">-</span> sabi_2017_north</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>sabi_diff_south <span class="ot">&lt;-</span> sabi_2023_south <span class="sc">-</span> sabi_2017_south</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>ndci <span class="ot">&lt;-</span> <span class="fu">turn_stats_values_into_df</span>(<span class="fu">list</span>(ndci_diff_lr, ndci_diff_south, ndci_diff_north))</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>sabi <span class="ot">&lt;-</span> <span class="fu">turn_stats_values_into_df</span>(<span class="fu">list</span>(sabi_diff_lr, sabi_diff_south, sabi_diff_north))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="wyniki" class="level2">
+<h2 class="anchored" data-anchor-id="wyniki">Wyniki</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(ndci_2017, <span class="st">"pipe"</span>, <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">med</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">land reclamation</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">-0.135</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.039</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">south of city</td>
+<td style="text-align: right;">0.012</td>
+<td style="text-align: right;">0.011</td>
+<td style="text-align: right;">-0.534</td>
+<td style="text-align: right;">0.348</td>
+<td style="text-align: right;">0.050</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">north of city</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.031</td>
+<td style="text-align: right;">-0.161</td>
+<td style="text-align: right;">0.267</td>
+<td style="text-align: right;">0.051</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(ndci_2023, <span class="st">"pipe"</span>, <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">med</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">land reclamation</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">-0.127</td>
+<td style="text-align: right;">0.174</td>
+<td style="text-align: right;">0.020</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">south of city</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">-0.406</td>
+<td style="text-align: right;">0.270</td>
+<td style="text-align: right;">0.036</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">north of city</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">-0.147</td>
+<td style="text-align: right;">0.180</td>
+<td style="text-align: right;">0.020</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Zestawiając ze sobą&nbsp;wartości wskaźnika NDCI między latami 2017 i 2023, widoczne są niskie wartości dla wszystkich obszarów. Wartości średnich i median sięgają rzędu tysięcznych.&nbsp;Dla wskaźnika NDCI, wyższe wartości świadczą o większej obecności chlorofilu a w wodzie. Obszar, na którym tworzono nowy ląd cechował się najmniejszymi średnimi wartościami. Warto odnotować, że na jego obszarze zanotowano także najmniejsze wahania wartości, o czym świadczy najniższa wartość odchylenia standardowego. Zestawiając dane z 2017 i 2023 zauważyć można podobieństwo w trendach zmian wartości między trzema obszarami. Widoczny jest spadek wartości statystyk w roku 2023. Zmniejszyły się także odchylenia, w szczególności dla obszaru na północ od miasta Limon.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(sabi_2017, <span class="st">"pipe"</span>, <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">med</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">land reclamation</td>
+<td style="text-align: right;">-0.046</td>
+<td style="text-align: right;">-0.042</td>
+<td style="text-align: right;">-0.241</td>
+<td style="text-align: right;">0.279</td>
+<td style="text-align: right;">0.070</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">south of city</td>
+<td style="text-align: right;">-0.018</td>
+<td style="text-align: right;">-0.024</td>
+<td style="text-align: right;">-0.402</td>
+<td style="text-align: right;">0.346</td>
+<td style="text-align: right;">0.059</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">north of city</td>
+<td style="text-align: right;">0.012</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">-0.193</td>
+<td style="text-align: right;">0.435</td>
+<td style="text-align: right;">0.073</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(sabi_2023, <span class="st">"pipe"</span>, <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">med</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">land reclamation</td>
+<td style="text-align: right;">-0.018</td>
+<td style="text-align: right;">-0.020</td>
+<td style="text-align: right;">-0.212</td>
+<td style="text-align: right;">0.189</td>
+<td style="text-align: right;">0.033</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">south of city</td>
+<td style="text-align: right;">-0.021</td>
+<td style="text-align: right;">-0.023</td>
+<td style="text-align: right;">-0.343</td>
+<td style="text-align: right;">0.310</td>
+<td style="text-align: right;">0.049</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">north of city</td>
+<td style="text-align: right;">-0.007</td>
+<td style="text-align: right;">-0.010</td>
+<td style="text-align: right;">-0.229</td>
+<td style="text-align: right;">0.343</td>
+<td style="text-align: right;">0.034</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Podobny trend jest widoczny także dla wskaźnika SABI. Wraz z upływem czasu, odnotowano zmniejszenie odchyleń wartości od średniej. Przeciwny trend zaobserwowano natomiast dla wartości obszaru lądotwórczego. Średnia i mediana wzrosły z czasem, w przeciwieństwie dla terenów przy mieście.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(ndci_2017_lr[], <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>), <span class="at">main =</span> <span class="st">"NDCI 2017 LR"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(ndci_2023_lr[], <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>), <span class="at">main =</span> <span class="st">"NDCI 2023 LR"</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(sabi_2017_lr[], <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>), <span class="at">main =</span> <span class="st">"SABI 2017 LR"</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(sabi_2023_lr[], <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>), <span class="at">main =</span> <span class="st">"SABI 2023 LR"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="example_report_files/figure-html/plot_histograms-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Spadek rozrzutu wartości jest widoczny również na wykresach rozkładu. Przedstawione histogramy opisują wartości wskaźników dla obszaru tworzenia lądu. Wartości w 2023 roku skupiały się bardziej wokół zera, gdzie dla danych z 2017 widoczny jest większy rozkład danych.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_2017_lr, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_2017_south, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_2017_north, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_2023_lr, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_2023_south, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_2023_north, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="example_report_files/figure-html/plot_ndci_indices-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Obserwując rozkład przestrzenny wartości wskaźników dla poszczególnych obszarów (kolejno od lewej obszar tworzenia lądu, obszar na południe od miasta i obszar na północ od miasta), widoczne jest mniejsze zróżnicowanie wartości w 2023 (dolny rząd) w porównaniu do 2017 (górny rząd).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(ndci, <span class="st">"pipe"</span>, <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">med</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">land reclamation</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">-0.202</td>
+<td style="text-align: right;">0.208</td>
+<td style="text-align: right;">0.043</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">south of city</td>
+<td style="text-align: right;">-0.012</td>
+<td style="text-align: right;">-0.011</td>
+<td style="text-align: right;">-0.489</td>
+<td style="text-align: right;">0.540</td>
+<td style="text-align: right;">0.062</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">north of city</td>
+<td style="text-align: right;">-0.026</td>
+<td style="text-align: right;">-0.024</td>
+<td style="text-align: right;">-0.308</td>
+<td style="text-align: right;">0.220</td>
+<td style="text-align: right;">0.055</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Dla wskaźnika NDCI, obszary na północ i południe od miasta odnotowały spadek średnich wartości w czasie. Odchylenie standardowe dla nich było jednak większe od obszaru, na którym tworzono nowy ląd. Obszar ten, ponownie w przeciwieństwie od reszty, cechował się minimalnym spadkiem wartości po upływie sześciu lat.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_diff_lr, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.1</span>, <span class="fl">0.1</span>))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_diff_south, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.1</span>, <span class="fl">0.1</span>))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(ndci_diff_north, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.1</span>, <span class="fl">0.1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="example_report_files/figure-html/plot_diff_indices-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Rozkład przestrzenny rastrów różnic wskaźników NDCI jest mało zróżnicowany. Jedynym wyjątkiem jest obszar na południu od terenu tworzenia nowego lądu, gdzie wartości wskaźnika wzrosły w 2023 roku.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(sabi, <span class="st">"pipe"</span>, <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">med</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">land reclamation</td>
+<td style="text-align: right;">0.028</td>
+<td style="text-align: right;">0.028</td>
+<td style="text-align: right;">-0.286</td>
+<td style="text-align: right;">0.347</td>
+<td style="text-align: right;">0.072</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">south of city</td>
+<td style="text-align: right;">-0.003</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">-0.422</td>
+<td style="text-align: right;">0.414</td>
+<td style="text-align: right;">0.075</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">north of city</td>
+<td style="text-align: right;">-0.019</td>
+<td style="text-align: right;">-0.013</td>
+<td style="text-align: right;">-0.442</td>
+<td style="text-align: right;">0.314</td>
+<td style="text-align: right;">0.080</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Zmiany wartości wskaźnika SABI zanotowały podobny trend do zmian wartości wskaźnika NDCI. Wartości dla obszarów na północ i południe od miasta zmalały, posiadały duże odchylenia standardowe. Obszar tworzenia lądu zanotował wzrost wartości SABI, jednocześnie posiadał mniejsze wachania od reszty obszarów.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(sabi_diff_lr, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(sabi_diff_south, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(sabi_diff_north, <span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="example_report_files/figure-html/plot_sabi_diff_indices-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Rozkład przestrzenny zmian dla wskaźnika SABI jest również podobny do rozkładu wskaźnika NDCI. WIdoczne jest małe zróżnicowanie. Jedynym wyjątkiem jest południowy region na obszarze tworzenia nowego lądu.</p>
+</section>
+<section id="podsumowanie-i-wnioski" class="level2">
+<h2 class="anchored" data-anchor-id="podsumowanie-i-wnioski">Podsumowanie i wnioski</h2>
+<p>Wraz z upływem czasu, zaobserwowano zmiany w wartościach wskaźników spektralnych dla wód wokół miasta Limon. Według obliczonych wartości, wraz z upływem czasu, obecność chlorofilu a zmalała dla terenów na północ i południe od miasta. Dla obszaru, na terenie którego odbywały się procesy tworzenia nowych lądów, wystąpił przeciwny trend. Na nim występowanie chlorofilu a wzrosło. Świadczy to o pozytywnym wpływie konstrukcji nowych lądów na jakość otaczających ich wód.</p>
+<p>W tej pracy wykorzystano jeden obraz dla każdego roku. W dalszych analizach, warto uwzględnić kilka obrazów satelitarnych dla każdego roku, najlepiej z różnych sezonów. Pozwoli to wykluczyć wpływ obecnych warunków klimatycznych na pozyskane wartości, zwłaszcza że obrazy satelitarne mogą nie być dostępne dla tych samych dat.</p>
+<p>Obszary badań powinny też mieć powierzchnię bardziej zbliżoną sobie. Problemem jest fakt wycięcia fragmentu terenu na obszarze, na którym powstawały lądy. Istotne jest wyodrębnienie lądów z obszarów badań, ponieważ mocno wpływają na wartości wskaźników dotyczących jakości wody.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
